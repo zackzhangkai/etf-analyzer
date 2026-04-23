@@ -244,27 +244,11 @@
             }
         }
 
-        // Fallback data when API fails
+        // Fallback data when API fails - use empty arrays to show no data
         function loadFallbackData() {
-            etfData = [
-                { code: '512480', name: '半导体ETF', category: 'chip', price: '1.245', change: '3.58', volume: '12.5亿' },
-                { code: '515880', name: '科技ETF', category: 'tech', price: '0.892', change: '2.76', volume: '8.3亿' },
-                { code: '159819', name: '人工智能ETF', category: 'ai', price: '1.156', change: '4.23', volume: '15.2亿' },
-                { code: '512760', name: '芯片ETF', category: 'chip', price: '1.089', change: '3.12', volume: '9.8亿' },
-                { code: '588000', name: '科创50ETF', category: 'tech', price: '0.956', change: '2.15', volume: '22.1亿' },
-                { code: '159995', name: '芯片龙头ETF', category: 'chip', price: '1.234', change: '3.45', volume: '7.6亿' },
-                { code: '512720', name: '计算机ETF', category: 'ai', price: '0.876', change: '2.89', volume: '5.4亿' },
-                { code: '515050', name: '5GETF', category: 'tech', price: '0.923', change: '1.98', volume: '6.7亿' },
-                { code: '159801', name: '5G通信ETF', category: 'tech', price: '1.045', change: '2.34', volume: '4.8亿' },
-                { code: '512660', name: '军工ETF', category: 'all', price: '1.123', change: '-0.56', volume: '3.2亿' },
-            ];
-
-            marketData = [
-                { name: '上证指数', price: '3247.12', change: '0.58', isPositive: true },
-                { name: '深证成指', price: '10356.82', change: '0.82', isPositive: true },
-                { name: '创业板指', price: '2089.45', change: '1.24', isPositive: true },
-                { name: '科创50', price: '1156.78', change: '2.15', isPositive: true }
-            ];
+            console.log('API failed, using empty fallback');
+            etfData = [];
+            marketData = [];
 
             updateMarketOverview();
             renderETFTable(etfData);
