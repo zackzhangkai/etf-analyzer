@@ -1,0 +1,24 @@
+{
+  "name": "etf-analyzer",
+  "version": "1.0.0",
+  "description": "实时展示热门 ETF 行情数据的智能分析平台。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zackzhangkai/etf-analyzer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/zackzhangkai/etf-analyzer/issues"
+  },
+  "homepage": "https://github.com/zackzhangkai/etf-analyzer#readme",
+  "dependencies": {
+    "iconv-lite": "^0.7.2"
+  }
+}

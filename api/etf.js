@@ -1,6 +1,8 @@
 // ETF 实时数据 API
 // 使用新浪财经接口获取 ETF 行情数据
 
+const iconv = require('iconv-lite');
+
 export default async function handler(req, res) {
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -47,7 +49,8 @@ export default async function handler(req, res) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const text = await response.text();
+    const text = await response.arrayBuffer();
+    const buffer = iconv.decode(Buffer.from(text), 'GBK');
 
     // 解析新浪财经返回的数据
     // 格式: var hq_str_sh512480="半导体ETF,1.245,1.198,1.246,1.248,1.197,1.245,1.246,123456789,12345,...";
