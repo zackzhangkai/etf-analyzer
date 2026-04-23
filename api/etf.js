@@ -13,17 +13,14 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // ETF 列表配置
+  // ETF 列表配置 - 使用已知有效的 ETF 代码
   const etfCodes = [
     { code: '512480', name: '半导体ETF', category: 'chip' },
-    { code: '515880', name: '科技ETF', category: 'tech' },
-    { code: '159819', name: '人工智能ETF', category: 'ai' },
+    { code: '515880', name: '通信ETF', category: 'tech' },
     { code: '512760', name: '芯片ETF', category: 'chip' },
     { code: '588000', name: '科创50ETF', category: 'tech' },
-    { code: '159995', name: '芯片龙头ETF', category: 'chip' },
     { code: '512720', name: '计算机ETF', category: 'ai' },
-    { code: '515050', name: '5GETF', category: 'tech' },
-    { code: '159801', name: '5G通信ETF', category: 'tech' },
+    { code: '515050', name: '通信ETF5G', category: 'tech' },
     { code: '512660', name: '军工ETF', category: 'all' },
   ];
 
@@ -51,11 +48,12 @@ export default async function handler(req, res) {
 
     const text = await response.arrayBuffer();
     const buffer = iconv.decode(Buffer.from(text), 'GBK');
+    const decoded = buffer.toString('utf-8');
 
     // 解析新浪财经返回的数据
     // 格式: var hq_str_sh512480="半导体ETF,1.245,1.198,1.246,1.248,1.197,1.245,1.246,123456789,12345,...";
     const etfData = [];
-    const lines = text.split('\n');
+    const lines = decoded.split('\n');
 
     for (const line of lines) {
       if (!line.includes('hq_str_')) continue;
@@ -69,16 +67,16 @@ export default async function handler(req, res) {
       if (fields.length < 3) continue;
 
       const name = fields[0];
-      const open = parseFloat(fields[1]) || 0;
-      const price = parseFloat(fields[2]) || 0;
+      const yesterdayClose = parseFloat(fields[1]) || 0;  // 昨收
+      const price = parseFloat(fields[2]) || 0;           // 当前价
       const high = parseFloat(fields[3]) || 0;
       const low = parseFloat(fields[4]) || 0;
       const volume = parseFloat(fields[5]) || 0; // 成交量(手)
       const amount = parseFloat(fields[6]) || 0; // 成交额(元)
 
-      // 计算涨跌幅
-      const change = open > 0 ? ((price - open) / open * 100) : 0;
-      const changeValue = price - open;
+      // 计算涨跌幅: (当前价 - 昨收) / 昨收 * 100
+      const change = yesterdayClose > 0 ? ((price - yesterdayClose) / yesterdayClose * 100) : 0;
+      const changeValue = price - yesterdayClose;
 
       // 格式化成交量和成交额
       let volumeStr = '';
@@ -108,7 +106,7 @@ export default async function handler(req, res) {
         price: price.toFixed(3),
         change: change.toFixed(2),
         changeValue: changeValue.toFixed(3),
-        open: open.toFixed(3),
+        yesterdayClose: yesterdayClose.toFixed(3),
         high: high.toFixed(3),
         low: low.toFixed(3),
         volume: volumeStr,
@@ -130,7 +128,8 @@ export default async function handler(req, res) {
       }
     );
 
-    const indicesText = await indicesResponse.text();
+    const indicesTextBuf = await indicesResponse.arrayBuffer();
+    const indicesDecoded = iconv.decode(Buffer.from(indicesTextBuf), 'GBK').toString('utf-8');
     const marketData = {
       sh000001: { name: '上证指数', index: 'sh' },
       sz399001: { name: '深证成指', index: 'sz' },
@@ -138,7 +137,7 @@ export default async function handler(req, res) {
       sh000688: { name: '科创50', index: 'sh' }
     };
 
-    for (const line of indicesText.split('\n')) {
+    for (const line of indicesDecoded.split('\n')) {
       if (!line.includes('hq_str_')) continue;
 
       const match = line.match(/hq_str_(sh|sz)(\d+)="(.+)"/);
