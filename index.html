@@ -220,7 +220,8 @@
         // Load data from API
         async function loadData() {
             try {
-                const response = await fetch('/api/etf');
+                // Add timestamp to prevent caching
+                const response = await fetch('/api/etf?_=' + Date.now());
                 const result = await response.json();
 
                 if (result.success) {
