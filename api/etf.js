@@ -149,13 +149,15 @@ export default async function handler(req, res) {
 
       if (fields.length >= 4) {
         const price = parseFloat(fields[1]) || 0;
-        const change = parseFloat(fields[2]) || 0;
-        const pctChange = parseFloat(fields[3]) || 0;
+        const yesterdayClose = parseFloat(fields[2]) || 0;
+        const changeVal = price - yesterdayClose;
+        const pctChange = yesterdayClose > 0 ? (changeVal / yesterdayClose * 100) : 0;
 
         marketData[key] = {
           ...marketData[key],
           price: price.toFixed(2),
           change: pctChange.toFixed(2),
+          changeVal: changeVal.toFixed(2),
           isPositive: pctChange >= 0
         };
       }
