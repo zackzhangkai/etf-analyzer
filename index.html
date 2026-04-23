@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF 智能分析平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .glass { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                    <h1 class="text-2xl font-bold">ETF 智能分析平台</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm opacity-80" id="current-time"></span>
+                    <div class="glass px-4 py-2 rounded-lg">
+                        <i class="fas fa-signal text-green-400 mr-2"></i>
+                        <span class="text-sm">市场交易中</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-6">
+        <!-- Market Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">上证指数</p>
+                        <p class="text-2xl font-bold">3,247.12</p>
+                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +0.58%</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <i class="fas fa-chart-area text-red-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">深证成指</p>
+                        <p class="text-2xl font-bold">10,356.82</p>
+                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +0.82%</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <i class="fas fa-chart-bar text-red-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">创业板指</p>
+                        <p class="text-2xl font-bold">2,089.45</p>
+                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +1.24%</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <i class="fas fa-rocket text-red-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">科创50</p>
+                        <p class="text-2xl font-bold">1,156.78</p>
+                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +2.15%</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <i class="fas fa-microchip text-purple-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- ETF List -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm mb-6">
+                    <div class="p-4 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold">热门ETF排行</h2>
+                            <div class="flex space-x-2">
+                                <button onclick="filterETF('all')" class="px-3 py-1 text-sm rounded-full bg-blue-500 text-white">全部</button>
+                                <button onclick="filterETF('tech')" class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">科技</button>
+                                <button onclick="filterETF('chip')" class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">芯片</button>
+                                <button onclick="filterETF('ai')" class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">AI</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">ETF名称</th>
+                                    <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">最新价</th>
+                                    <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">涨跌幅</th>
+                                    <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">成交额</th>
+                                    <th class="px-4 py-3 text-center text-sm font-medium text-gray-600">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="etf-table-body">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold">走势分析</h2>
+                        <div class="flex space-x-2">
+                            <button onclick="changeTimeRange('1D')" class="time-btn px-3 py-1 text-sm rounded bg-blue-500 text-white">1日</button>
+                            <button onclick="changeTimeRange('1W')" class="time-btn px-3 py-1 text-sm rounded bg-gray-200 text-gray-700">1周</button>
+                            <button onclick="changeTimeRange('1M')" class="time-btn px-3 py-1 text-sm rounded bg-gray-200 text-gray-700">1月</button>
+                            <button onclick="changeTimeRange('3M')" class="time-btn px-3 py-1 text-sm rounded bg-gray-200 text-gray-700">3月</button>
+                            <button onclick="changeTimeRange('1Y')" class="time-btn px-3 py-1 text-sm rounded bg-gray-200 text-gray-700">1年</button>
+                        </div>
+                    </div>
+                    <canvas id="etfChart" height="120"></canvas>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Selected ETF Info -->
+                <div class="bg-white rounded-xl shadow-sm p-4" id="selected-etf-card">
+                    <h3 class="text-lg font-semibold mb-4">选中ETF详情</h3>
+                    <div id="etf-detail-content">
+                        <p class="text-gray-500 text-center py-8">点击左侧ETF查看详情</p>
+                    </div>
+                </div>
+
+                <!-- Sector Distribution -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <h3 class="text-lg font-semibold mb-4">板块分布</h3>
+                    <canvas id="sectorChart" height="200"></canvas>
+                </div>
+
+                <!-- Market Sentiment -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <h3 class="text-lg font-semibold mb-4">市场情绪</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>恐慌</span>
+                                <span>贪婪</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500" style="width: 65%"></div>
+                            </div>
+                            <p class="text-center text-sm mt-1 text-orange-500 font-medium">贪婪 65</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hot Topics -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <h3 class="text-lg font-semibold mb-4">热门概念</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm">光模块</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">算力</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">钠电池</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">AI芯片</span>
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-sm">液冷</span>
+                        <span class="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-sm">HBM</span>
+                        <span class="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm">机器人</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ETF Data
+        const etfData = [
+            { code: '512480', name: '半导体ETF', category: 'chip', price: 1.245, change: 3.58, volume: '12.5亿', pe: 45.2, pb: 3.8 },
+            { code: '515880', name: '科技ETF', category: 'tech', price: 0.892, change: 2.76, volume: '8.3亿', pe: 38.5, pb: 2.9 },
+            { code: '159819', name: '人工智能ETF', category: 'ai', price: 1.156, change: 4.23, volume: '15.2亿', pe: 52.1, pb: 4.2 },
+            { code: '512760', name: '芯片ETF', category: 'chip', price: 1.089, change: 3.12, volume: '9.8亿', pe: 42.8, pb: 3.5 },
+            { code: '588000', name: '科创50ETF', category: 'tech', price: 0.956, change: 2.15, volume: '22.1亿', pe: 65.3, pb: 5.1 },
+            { code: '159995', name: '芯片龙头ETF', category: 'chip', price: 1.234, change: 3.45, volume: '7.6亿', pe: 44.1, pb: 3.9 },
+            { code: '512720', name: '计算机ETF', category: 'ai', price: 0.876, change: 2.89, volume: '5.4亿', pe: 35.2, pb: 2.6 },
+            { code: '515050', name: '5GETF', category: 'tech', price: 0.923, change: 1.98, volume: '6.7亿', pe: 28.9, pb: 2.3 },
+            { code: '159801', name: '5G通信ETF', category: 'tech', price: 1.045, change: 2.34, volume: '4.8亿', pe: 31.2, pb: 2.5 },
+            { code: '512660', name: '军工ETF', category: 'all', price: 1.123, change: -0.56, volume: '3.2亿', pe: 55.8, pb: 3.2 },
+        ];
+
+        let currentETF = etfData[0];
+        let chartInstance = null;
+        let sectorChartInstance = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            renderETFTable(etfData);
+            initChart();
+            initSectorChart();
+            selectETF(etfData[0]);
+        });
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = 
+                now.toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function renderETFTable(data) {
+            const tbody = document.getElementById('etf-table-body');
+            tbody.innerHTML = data.map(etf => `
+                <tr class="hover:bg-gray-50 cursor-pointer transition-colors" onclick='selectETF(${JSON.stringify(etf)})'>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold mr-3">
+                                ${etf.name.substring(0, 2)}
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">${etf.name}</p>
+                                <p class="text-xs text-gray-500">${etf.code}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-right font-medium">${etf.price.toFixed(3)}</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="${etf.change >= 0 ? 'positive' : 'negative'} font-medium">
+                            <i class="fas fa-arrow-${etf.change >= 0 ? 'up' : 'down'}"></i>
+                            ${etf.change >= 0 ? '+' : ''}${etf.change.toFixed(2)}%
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right text-gray-600">${etf.volume}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button class="text-blue-500 hover:text-blue-700 text-sm">
+                            <i class="fas fa-chart-line"></i> 分析
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterETF(category) {
+            const filtered = category === 'all' ? etfData : etfData.filter(e => e.category === category || category === 'all');
+            renderETFTable(filtered);
+            
+            // Update button styles
+            document.querySelectorAll('button[onclick^="filterETF"]').forEach(btn => {
+                btn.className = 'px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300';
+            });
+            event.target.className = 'px-3 py-1 text-sm rounded-full bg-blue-500 text-white';
+        }
+
+        function selectETF(etf) {
+            currentETF = etf;
+            const detailContent = document.getElementById('etf-detail-content');
+            detailContent.innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold mx-auto mb-2">
+                        ${etf.name.substring(0, 2)}
+                    </div>
+                    <h4 class="text-xl font-bold">${etf.name}</h4>
+                    <p class="text-gray-500">${etf.code}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">最新价</p>
+                        <p class="text-xl font-bold ${etf.change >= 0 ? 'positive' : 'negative'}">${etf.price.toFixed(3)}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">涨跌幅</p>
+                        <p class="text-xl font-bold ${etf.change >= 0 ? 'positive' : 'negative'}">${etf.change >= 0 ? '+' : ''}${etf.change.toFixed(2)}%</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">市盈率</p>
+                        <p class="text-lg font-semibold text-gray-800">${etf.pe}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">市净率</p>
+                        <p class="text-lg font-semibold text-gray-800">${etf.pb}</p>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">成交额</span>
+                        <span class="font-medium">${etf.volume}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">52周最高</span>
+                        <span class="font-medium">${(etf.price * 1.35).toFixed(3)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">52周最低</span>
+                        <span class="font-medium">${(etf.price * 0.72).toFixed(3)}</span>
+                    </div>
+                </div>
+            `;
+            updateChart(etf);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('etfChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: generateTimeLabels(30),
+                    datasets: [{
+                        label: '价格',
+                        data: generateRandomData(30, 1.0, 1.3),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { maxTicksLimit: 6 }
+                        },
+                        y: {
+                            grid: { color: '#f3f4f6' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initSectorChart() {
+            const ctx = document.getElementById('sectorChart').getContext('2d');
+            sectorChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['芯片', 'AI', '通信', '新能源', '其他'],
+                    datasets: [{
+                        data: [35, 28, 18, 12, 7],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#6b7280'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        function updateChart(etf) {
+            if (!chartInstance) return;
+            
+            const basePrice = etf.price;
+            const data = generateRandomData(30, basePrice * 0.9, basePrice * 1.1);
+            
+            chartInstance.data.datasets[0].data = data;
+            chartInstance.data.datasets[0].borderColor = etf.change >= 0 ? '#10b981' : '#ef4444';
+            chartInstance.data.datasets[0].backgroundColor = etf.change >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            chartInstance.update();
+        }
+
+        function changeTimeRange(range) {
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.className = 'time-btn px-3 py-1 text-sm rounded bg-gray-200 text-gray-700';
+            });
+            event.target.className = 'time-btn px-3 py-1 text-sm rounded bg-blue-500 text-white';
+            
+            // Update chart data based on range
+            let points = range === '1D' ? 30 : range === '1W' ? 50 : range === '1M' ? 60 : range === '3M' ? 90 : 120;
+            if (chartInstance) {
+                chartInstance.data.labels = generateTimeLabels(points);
+                chartInstance.data.datasets[0].data = generateRandomData(points, currentETF.price * 0.8, currentETF.price * 1.2);
+                chartInstance.update();
+            }
+        }
+
+        function generateTimeLabels(count) {
+            const labels = [];
+            const now = new Date();
+            for (let i = count; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            }
+            return labels;
+        }
+
+        function generateRandomData(count, min, max) {
+            const data = [];
+            let current = (min + max) / 2;
+            for (let i = 0; i < count; i++) {
+                current += (Math.random() - 0.5) * (max - min) * 0.1;
+                current = Math.max(min, Math.min(max, current));
+                data.push(current);
+            }
+            return data;
+        }
+    </script>
+</body>
+</html>
