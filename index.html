@@ -46,48 +46,48 @@
     <div class="container mx-auto px-6 py-6">
         <!-- Market Overview -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover market-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm">上证指数</p>
-                        <p class="text-2xl font-bold">3,247.12</p>
-                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +0.58%</p>
+                        <p class="price text-2xl font-bold">--</p>
+                        <p class="change positive text-sm"><i class="fas fa-arrow-up"></i> --%</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-lg">
                         <i class="fas fa-chart-area text-red-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover market-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm">深证成指</p>
-                        <p class="text-2xl font-bold">10,356.82</p>
-                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +0.82%</p>
+                        <p class="price text-2xl font-bold">--</p>
+                        <p class="change positive text-sm"><i class="fas fa-arrow-up"></i> --%</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-lg">
                         <i class="fas fa-chart-bar text-red-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover market-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm">创业板指</p>
-                        <p class="text-2xl font-bold">2,089.45</p>
-                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +1.24%</p>
+                        <p class="price text-2xl font-bold">--</p>
+                        <p class="change positive text-sm"><i class="fas fa-arrow-up"></i> --%</p>
                     </div>
                     <div class="bg-red-100 p-3 rounded-lg">
                         <i class="fas fa-rocket text-red-500 text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl p-4 shadow-sm card-hover">
+            <div class="bg-white rounded-xl p-4 shadow-sm card-hover market-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm">科创50</p>
-                        <p class="text-2xl font-bold">1,156.78</p>
-                        <p class="positive text-sm"><i class="fas fa-arrow-up"></i> +2.15%</p>
+                        <p class="price text-2xl font-bold">--</p>
+                        <p class="change positive text-sm"><i class="fas fa-arrow-up"></i> --%</p>
                     </div>
                     <div class="bg-purple-100 p-3 rounded-lg">
                         <i class="fas fa-microchip text-purple-500 text-xl"></i>
@@ -264,9 +264,12 @@
                     const priceEl = card.querySelector('.price');
                     const changeEl = card.querySelector('.change');
 
-                    if (priceEl) priceEl.textContent = data.price;
+                    // Format price with thousand separator
+                    const formattedPrice = parseFloat(data.price).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                    if (priceEl) priceEl.textContent = formattedPrice;
                     if (changeEl) {
-                        changeEl.textContent = `${data.isPositive ? '+' : ''}${data.change}%`;
+                        changeEl.innerHTML = `<i class="fas fa-arrow-${data.isPositive ? 'up' : 'down'}"></i> ${data.isPositive ? '+' : ''}${data.change}%`;
                         changeEl.className = `change text-sm ${data.isPositive ? 'positive' : 'negative'}`;
                     }
                 }
