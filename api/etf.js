@@ -74,14 +74,14 @@ export default async function handler(req, res) {
       const price = parseFloat(fields[2]) || 0;           // 当前价
       const high = parseFloat(fields[3]) || 0;
       const low = parseFloat(fields[4]) || 0;
-      const volume = parseFloat(fields[7]) || 0; // 成交量(手) - fields[7]
-      const amount = parseFloat(fields[8]) || 0; // 成交额(元) - fields[8]
+      const volume = parseFloat(fields[8]) || 0; // 成交量(手) - fields[8]
+      const amount = parseFloat(fields[9]) || 0; // 成交额(元) - fields[9]
 
       // 计算涨跌幅: (当前价 - 昨收) / 昨收 * 100
       const change = yesterdayClose > 0 ? ((price - yesterdayClose) / yesterdayClose * 100) : 0;
       const changeValue = price - yesterdayClose;
 
-      // 格式化成交量和成交额 (单位已经是正确的)
+      // 格式化成交量和成交额
       let volumeStr = '';
       if (volume >= 100000000) {
         volumeStr = (volume / 100000000).toFixed(1) + '亿';
