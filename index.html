@@ -197,44 +197,109 @@
     </div>
 
     <script>
-        // ETF Data
-        const etfData = [
-            { code: '512480', name: '半导体ETF', category: 'chip', price: 1.245, change: 3.58, volume: '12.5亿', pe: 45.2, pb: 3.8 },
-            { code: '515880', name: '科技ETF', category: 'tech', price: 0.892, change: 2.76, volume: '8.3亿', pe: 38.5, pb: 2.9 },
-            { code: '159819', name: '人工智能ETF', category: 'ai', price: 1.156, change: 4.23, volume: '15.2亿', pe: 52.1, pb: 4.2 },
-            { code: '512760', name: '芯片ETF', category: 'chip', price: 1.089, change: 3.12, volume: '9.8亿', pe: 42.8, pb: 3.5 },
-            { code: '588000', name: '科创50ETF', category: 'tech', price: 0.956, change: 2.15, volume: '22.1亿', pe: 65.3, pb: 5.1 },
-            { code: '159995', name: '芯片龙头ETF', category: 'chip', price: 1.234, change: 3.45, volume: '7.6亿', pe: 44.1, pb: 3.9 },
-            { code: '512720', name: '计算机ETF', category: 'ai', price: 0.876, change: 2.89, volume: '5.4亿', pe: 35.2, pb: 2.6 },
-            { code: '515050', name: '5GETF', category: 'tech', price: 0.923, change: 1.98, volume: '6.7亿', pe: 28.9, pb: 2.3 },
-            { code: '159801', name: '5G通信ETF', category: 'tech', price: 1.045, change: 2.34, volume: '4.8亿', pe: 31.2, pb: 2.5 },
-            { code: '512660', name: '军工ETF', category: 'all', price: 1.123, change: -0.56, volume: '3.2亿', pe: 55.8, pb: 3.2 },
-        ];
-
-        let currentETF = etfData[0];
+        // Global state
+        let etfData = [];
+        let marketData = [];
+        let currentETF = null;
         let chartInstance = null;
         let sectorChartInstance = null;
+        let refreshInterval = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateTime();
             setInterval(updateTime, 1000);
-            renderETFTable(etfData);
             initChart();
             initSectorChart();
-            selectETF(etfData[0]);
+            loadData();
+
+            // Auto refresh every 30 seconds
+            refreshInterval = setInterval(loadData, 30000);
         });
+
+        // Load data from API
+        async function loadData() {
+            try {
+                const response = await fetch('/api/etf');
+                const result = await response.json();
+
+                if (result.success) {
+                    etfData = result.data.etfs;
+                    marketData = result.data.market;
+
+                    updateMarketOverview();
+                    renderETFTable(etfData);
+
+                    if (currentETF) {
+                        const updated = etfData.find(e => e.code === currentETF.code);
+                        if (updated) selectETF(updated);
+                    } else if (etfData.length > 0) {
+                        selectETF(etfData[0]);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                // Use fallback data if API fails
+                loadFallbackData();
+            }
+        }
+
+        // Fallback data when API fails
+        function loadFallbackData() {
+            etfData = [
+                { code: '512480', name: '半导体ETF', category: 'chip', price: '1.245', change: '3.58', volume: '12.5亿' },
+                { code: '515880', name: '科技ETF', category: 'tech', price: '0.892', change: '2.76', volume: '8.3亿' },
+                { code: '159819', name: '人工智能ETF', category: 'ai', price: '1.156', change: '4.23', volume: '15.2亿' },
+                { code: '512760', name: '芯片ETF', category: 'chip', price: '1.089', change: '3.12', volume: '9.8亿' },
+                { code: '588000', name: '科创50ETF', category: 'tech', price: '0.956', change: '2.15', volume: '22.1亿' },
+                { code: '159995', name: '芯片龙头ETF', category: 'chip', price: '1.234', change: '3.45', volume: '7.6亿' },
+                { code: '512720', name: '计算机ETF', category: 'ai', price: '0.876', change: '2.89', volume: '5.4亿' },
+                { code: '515050', name: '5GETF', category: 'tech', price: '0.923', change: '1.98', volume: '6.7亿' },
+                { code: '159801', name: '5G通信ETF', category: 'tech', price: '1.045', change: '2.34', volume: '4.8亿' },
+                { code: '512660', name: '军工ETF', category: 'all', price: '1.123', change: '-0.56', volume: '3.2亿' },
+            ];
+
+            marketData = [
+                { name: '上证指数', price: '3247.12', change: '0.58', isPositive: true },
+                { name: '深证成指', price: '10356.82', change: '0.82', isPositive: true },
+                { name: '创业板指', price: '2089.45', change: '1.24', isPositive: true },
+                { name: '科创50', price: '1156.78', change: '2.15', isPositive: true }
+            ];
+
+            updateMarketOverview();
+            renderETFTable(etfData);
+            if (etfData.length > 0) selectETF(etfData[0]);
+        }
+
+        function updateMarketOverview() {
+            const cards = document.querySelectorAll('.market-card');
+            cards.forEach((card, index) => {
+                if (marketData[index]) {
+                    const data = marketData[index];
+                    const priceEl = card.querySelector('.price');
+                    const changeEl = card.querySelector('.change');
+
+                    if (priceEl) priceEl.textContent = data.price;
+                    if (changeEl) {
+                        changeEl.textContent = `${data.isPositive ? '+' : ''}${data.change}%`;
+                        changeEl.className = `change text-sm ${data.isPositive ? 'positive' : 'negative'}`;
+                    }
+                }
+            });
+        }
 
         function updateTime() {
             const now = new Date();
-            document.getElementById('current-time').textContent = 
+            document.getElementById('current-time').textContent =
                 now.toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
         function renderETFTable(data) {
             const tbody = document.getElementById('etf-table-body');
-            tbody.innerHTML = data.map(etf => `
-                <tr class="hover:bg-gray-50 cursor-pointer transition-colors" onclick='selectETF(${JSON.stringify(etf)})'>
+            tbody.innerHTML = data.map(etf => {
+                const isPositive = parseFloat(etf.change) >= 0;
+                return `
+                <tr class="hover:bg-gray-50 cursor-pointer transition-colors" onclick='selectETF(${JSON.stringify(etf).replace(/'/g, "&#39;")})'>
                     <td class="px-4 py-3">
                         <div class="flex items-center">
                             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold mr-3">
@@ -246,11 +311,11 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-right font-medium">${etf.price.toFixed(3)}</td>
+                    <td class="px-4 py-3 text-right font-medium">${etf.price}</td>
                     <td class="px-4 py-3 text-right">
-                        <span class="${etf.change >= 0 ? 'positive' : 'negative'} font-medium">
-                            <i class="fas fa-arrow-${etf.change >= 0 ? 'up' : 'down'}"></i>
-                            ${etf.change >= 0 ? '+' : ''}${etf.change.toFixed(2)}%
+                        <span class="${isPositive ? 'positive' : 'negative'} font-medium">
+                            <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i>
+                            ${isPositive ? '+' : ''}${etf.change}%
                         </span>
                     </td>
                     <td class="px-4 py-3 text-right text-gray-600">${etf.volume}</td>
@@ -260,13 +325,13 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function filterETF(category) {
             const filtered = category === 'all' ? etfData : etfData.filter(e => e.category === category || category === 'all');
             renderETFTable(filtered);
-            
+
             // Update button styles
             document.querySelectorAll('button[onclick^="filterETF"]').forEach(btn => {
                 btn.className = 'px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300';
@@ -276,6 +341,7 @@
 
         function selectETF(etf) {
             currentETF = etf;
+            const isPositive = parseFloat(etf.change) >= 0;
             const detailContent = document.getElementById('etf-detail-content');
             detailContent.innerHTML = `
                 <div class="text-center mb-4">
@@ -288,33 +354,29 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="bg-gray-50 rounded-lg p-3 text-center">
                         <p class="text-xs text-gray-500">最新价</p>
-                        <p class="text-xl font-bold ${etf.change >= 0 ? 'positive' : 'negative'}">${etf.price.toFixed(3)}</p>
+                        <p class="text-xl font-bold ${isPositive ? 'positive' : 'negative'}">${etf.price}</p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-3 text-center">
                         <p class="text-xs text-gray-500">涨跌幅</p>
-                        <p class="text-xl font-bold ${etf.change >= 0 ? 'positive' : 'negative'}">${etf.change >= 0 ? '+' : ''}${etf.change.toFixed(2)}%</p>
+                        <p class="text-xl font-bold ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${etf.change}%</p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-3 text-center">
-                        <p class="text-xs text-gray-500">市盈率</p>
-                        <p class="text-lg font-semibold text-gray-800">${etf.pe}</p>
+                        <p class="text-xs text-gray-500">今开</p>
+                        <p class="text-lg font-semibold text-gray-800">${etf.open || etf.price}</p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-3 text-center">
-                        <p class="text-xs text-gray-500">市净率</p>
-                        <p class="text-lg font-semibold text-gray-800">${etf.pb}</p>
+                        <p class="text-xs text-gray-500">成交量</p>
+                        <p class="text-lg font-semibold text-gray-800">${etf.volume}</p>
                     </div>
                 </div>
                 <div class="space-y-2">
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">成交额</span>
-                        <span class="font-medium">${etf.volume}</span>
+                        <span class="text-gray-500">最高</span>
+                        <span class="font-medium">${etf.high || etf.price}</span>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">52周最高</span>
-                        <span class="font-medium">${(etf.price * 1.35).toFixed(3)}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">52周最低</span>
-                        <span class="font-medium">${(etf.price * 0.72).toFixed(3)}</span>
+                        <span class="text-gray-500">最低</span>
+                        <span class="font-medium">${etf.low || etf.price}</span>
                     </div>
                 </div>
             `;
